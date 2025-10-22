@@ -1,6 +1,6 @@
 import { Box, Text } from "@chakra-ui/react";
 import React from "react";
-import { Link } from "react-router";
+import Link from "next/link";
 
 const Error404 = () => {
   return (
@@ -11,7 +11,7 @@ const Error404 = () => {
         <Text textStyle="4xl">Oops! Nothing was found</Text>
         <Text textStyle="2xl">
           The page you are looking for might have been removed had its name
-          changed or is temporarily unavailable. <Link to="/"> <span className="text-rose-600">Return to homepage </span>  </Link> 
+          changed or is temporarily unavailable. <Link href="/"> <span className="text-rose-600">Return to homepage </span>  </Link> 
         </Text>
       </Box>
     </Box>

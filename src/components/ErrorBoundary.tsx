@@ -1,5 +1,5 @@
 import { Box, Text,} from "@chakra-ui/react";
-import { Link } from "react-router";
+import Link from "next/link";
 
 export default function ErrorBoundaryComponent(props) {
   console.log("err", props.error);
@@ -16,7 +16,7 @@ export default function ErrorBoundaryComponent(props) {
         <Text textStyle="4xl">Oops! Error Occurred</Text>
         <Text textStyle="2xl">
           An unexpected error occurred.{" "}
-          <Link to="/">
+          <Link href="/">
             {" "}
             <span className="text-rose-600">Return to homepage </span>{" "}
           </Link>

@@ -6,7 +6,7 @@ import { ThemeProvider, useTheme } from 'next-themes'
 import * as React from 'react'
 import { LuMoon, LuSun } from 'react-icons/lu'
 
-export function ColorModeProvider(props) {
+export function ColorModeProvider(props: any) {
   return (
     <ThemeProvider attribute='class' disableTransitionOnChange {...props} />
   )

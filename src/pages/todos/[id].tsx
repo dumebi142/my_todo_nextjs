@@ -1,16 +1,20 @@
+import { ITodoItem } from "@/interfaces/Item";
 import { Box,  SkeletonText, Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
-import { Link, useParams } from "react-router";
 
 const ToDoListDetails = () => {
-  const params = useParams();
-  const id = params.id;
-  const [todo, setTodo] = useState({});
+  const router = useRouter();
+  const id = router.query.id;
+  // const id = "1";
+  const [todo, setTodo] = useState<ITodoItem>({} as ITodoItem);
   const todoQuery = useQuery({
-    queryKey: ["todosDetails"],
+    queryKey: ["todosDetails", id],
     queryFn: async () => {
       const response = await axios.get(
         `https://jsonplaceholder.typicode.com/todos/${id}`
@@ -25,7 +29,7 @@ const ToDoListDetails = () => {
 
   return (
     <Box className="p-10 bg-gray-200 min-h-lvh">
-      <Link to="/">
+      <Link href="/">
         <Box className="flex gap-3 ">
           <FaArrowLeft size="30" />
 
@@ -35,9 +39,9 @@ const ToDoListDetails = () => {
 
       <Box className="bg-white grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2  p-16 mt-11">
         <Text className="font-bold text-3xl lg:pb-24 sm:pb-10"> Title:</Text>{" "}
-        <Text className=" text-3xl ">{todoQuery.isLoading ? <SkeletonText/> : todo.title}</Text>
+        <Text className=" text-3xl " as='div'>{todoQuery.isLoading ? <SkeletonText/> : todo.title}</Text>
         <Text className="font-bold text-3xl "> Status:</Text>{" "}
-        <Text className=" text-3xl ">
+        <Text className=" text-3xl " as='div'>
           {todoQuery.isLoading ? <SkeletonText/> : todo.completed ? "Completed" : "Incomplete"}
         </Text>
       </Box>
