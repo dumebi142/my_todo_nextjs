@@ -1,25 +1,42 @@
-import { Tooltip as ChakraTooltip, Portal } from '@chakra-ui/react'
 import * as React from 'react'
+import {
+  Tooltip as ChakraTooltip,
+  Portal,
+  UseTooltipProps as ChakraTooltipProps,
+} from '@chakra-ui/react'
 
-export const Tooltip = React.forwardRef(function Tooltip(props, ref) {
-  const {
-    showArrow,
-    children,
-    disabled,
-    portalled = true,
-    content,
-    contentProps,
-    portalRef,
-    ...rest
-  } = props
+interface TooltipProps extends Omit<ChakraTooltipProps, 'children'> {
+  children: React.ReactNode
+  content: React.ReactNode
+  disabled?: boolean
+  showArrow?: boolean
+  portalled?: boolean
+  contentProps?: React.ComponentProps<typeof ChakraTooltip.Content>
+  portalRef?: React.RefObject<HTMLElement>
 
-  if (disabled) return children
+  
+}
 
-  return (
-    <ChakraTooltip.Root {...rest}>
-      <ChakraTooltip.Trigger asChild>{children}</ChakraTooltip.Trigger>
-      <Portal disabled={!portalled} container={portalRef}>
-        <ChakraTooltip.Positioner>
+export const Tooltip = React.forwardRef<HTMLDivElement, TooltipProps>(
+  function Tooltip(
+    {
+      showArrow = false,
+      children,
+      disabled,
+      portalled = true,
+      content,
+      contentProps,
+      portalRef,
+      ...rest
+    },
+    ref
+  ) {
+    if (disabled) return <>{children}</>
+
+    return (
+      <ChakraTooltip.Root {...rest}>
+        <ChakraTooltip.Trigger asChild>{children}</ChakraTooltip.Trigger>
+        <Portal container={portalRef} disabled={!portalled}>
           <ChakraTooltip.Content ref={ref} {...contentProps}>
             {showArrow && (
               <ChakraTooltip.Arrow>
@@ -28,8 +45,8 @@ export const Tooltip = React.forwardRef(function Tooltip(props, ref) {
             )}
             {content}
           </ChakraTooltip.Content>
-        </ChakraTooltip.Positioner>
-      </Portal>
-    </ChakraTooltip.Root>
-  )
-})
+        </Portal>
+      </ChakraTooltip.Root>
+    )
+  }
+)

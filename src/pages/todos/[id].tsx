@@ -2,8 +2,7 @@ import { ITodoItem } from "@/interfaces/Item";
 import { Box,  SkeletonText, Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import Link from "next/link";
-import { useParams } from "next/navigation";
+import Link from "next/link"
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";

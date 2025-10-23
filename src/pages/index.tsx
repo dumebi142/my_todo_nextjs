@@ -1,193 +1,173 @@
+'use client'
+
+import React, { useState, useEffect, useMemo } from "react"
 import {
   Box,
   ButtonGroup,
   IconButton,
-  Pagination,
-  Text,
   Input,
   InputGroup,
-  // Assuming SkeletonText and Dropdown are custom components
-} from "@chakra-ui/react";
+  Text,
+} from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { FaPlusCircle } from "react-icons/fa"
+import { LuChevronLeft, LuChevronRight } from "react-icons/lu"
+import Link from "next/link"
+import axios from "axios"
 
-import { useQuery } from "@tanstack/react-query";
-import { FaPlusCircle } from "react-icons/fa";
-import SingleTodo from "../components/SingleTodo";
-import { LuChevronLeft, LuChevronRight, LuSearch } from "react-icons/lu";
-
-import axios from "axios";
-import { useState, useEffect, useMemo } from "react";
-import Dropdrown from "../components/Dropdrown";
-import Link from "next/link";
-import { ITodoItem } from "@/interfaces/Item";
+import SingleTodo from "../components/SingleTodo"
+import Dropdrown from "../components/Dropdrown"
+import { ITodoItem } from "@/interfaces/Item"
 
 // Constants
-const PAGE_SIZE = 10;
-const INITIAL_FILTER = "all";
+const PAGE_SIZE = 10
+const INITIAL_FILTER = "all"
+
+// Dropdown item type
+interface DropdownItem {
+  label: string
+  value: string
+}
 
 export default function Home() {
-  // --- State Management ---
-  // 1. Raw data (from the query hook)
-  const [masterList, setMasterList] = useState<ITodoItem[]>([]);
-  
-  // 2. Control states for filtering/searching/pagination
-  const [page, setPage] = useState(1);
-  const [searchText, setSearchText] = useState("");
-  const [filterValue, setFilterValue] = useState<string | boolean>(INITIAL_FILTER);
+  // --- State ---
+  const [masterList, setMasterList] = useState<ITodoItem[]>([])
+  const [page, setPage] = useState(1)
+  const [searchText, setSearchText] = useState("")
+  const [filterValue, setFilterValue] = useState<string | boolean>(INITIAL_FILTER)
 
-  // --- TanStack Query Data Fetching ---
+  // --- Fetch Todos ---
   const todoQuery = useQuery({
     queryKey: ["todos"],
     queryFn: async () => {
-      const response = await axios.get(
+      const response = await axios.get<ITodoItem[]>(
         "https://jsonplaceholder.typicode.com/todos"
-      );
-      const data: ITodoItem[] = await response.data;
-      // Set the master list once the data is fetched
-      setMasterList(data); 
-      return data;
+      )
+      setMasterList(response.data)
+      return response.data
     },
-  });
+  })
 
-  // --- Filtering & Searching Logic (Memoized Pipeline) ---
+  // --- Filter + Search ---
   const filteredAndSearchedList = useMemo(() => {
-    let result = masterList;
+    let result = masterList
 
-    // 1. Apply Search
     if (searchText) {
       result = result.filter((todo) =>
         todo.title.toLowerCase().includes(searchText.toLowerCase())
-      );
+      )
     }
 
-    // 2. Apply Filter
     if (filterValue !== INITIAL_FILTER) {
-      // TypeScript safety: convert filterValue to boolean for comparison
-      const filterCompleted = filterValue === true; 
-      result = result.filter((todo) => todo.completed === filterCompleted);
+      const filterCompleted = filterValue === true
+      result = result.filter((todo) => todo.completed === filterCompleted)
     }
-    
-    // The result is the complete list that matches all criteria
-    return result;
-  }, [masterList, searchText, filterValue]);
 
-  // --- Pagination Logic (Derived State) ---
-  const pageLength = filteredAndSearchedList.length;
-  const totalPages = Math.ceil(pageLength / PAGE_SIZE);
+    return result
+  }, [masterList, searchText, filterValue])
 
+  // --- Pagination ---
+  const totalPages = Math.ceil(filteredAndSearchedList.length / PAGE_SIZE)
   const currentList = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE;
-    const end = start + PAGE_SIZE;
-    return filteredAndSearchedList.slice(start, end);
-  }, [filteredAndSearchedList, page]);
+    const start = (page - 1) * PAGE_SIZE
+    const end = start + PAGE_SIZE
+    return filteredAndSearchedList.slice(start, end)
+  }, [filteredAndSearchedList, page])
 
-  // --- Side Effect: Reset Page on Filter/Search Change ---
-  // If the filter or search text changes, the page must reset to 1
+  // Reset page if filtered list changes
   useEffect(() => {
-    if (page > totalPages) {
-       setPage(1);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredAndSearchedList]);
-
+    if (page > totalPages) setPage(1)
+  }, [filteredAndSearchedList, page, totalPages])
 
   // --- Handlers ---
-  function handleFilter(event: { label: string; value: string | boolean }) {
-    setFilterValue(event.value);
-    setPage(1); // Crucial: Reset page on filter change
+  const handleFilter = (value: string) => {
+    if (value === "true") setFilterValue(true)
+    else if (value === "false") setFilterValue(false)
+    else setFilterValue("all")
+    setPage(1)
   }
 
-  function handleSearch(event: React.ChangeEvent<HTMLInputElement>) {
-    setSearchText(event.target.value);
-    setPage(1); // Crucial: Reset page on search change
-  }
-  
-  function handlePageChange(props: { page: number; pageSize: number }) {
-    setPage(props.page);
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value)
+    setPage(1)
   }
 
-  // --- Rendering ---
-  if (todoQuery.isError) return <h1>Error loading data!!!</h1>;
+  // const handlePageChange = ({ page }: { page: number }) => {
+  //   setPage(page)
+  // }
 
-  const items = [
+  // --- Dropdown items ---
+  const items: DropdownItem[] = [
     { label: "All", value: INITIAL_FILTER },
-    { label: "Completed", value: true },
-    { label: "Incompleted", value: false },
-  ];
+    { label: "Completed", value: "true" },
+    { label: "Incompleted", value: "false" },
+  ]
+
+  if (todoQuery.isError) return <h1>Error loading data!!!</h1>
 
   return (
     <Box className="p-10 bg-gray-200 relative min-h-lvh">
+      {/* Add Task Button */}
       <Link href="/create">
         <Box aria-label="add Task" className="absolute right-10 bottom-7">
-          <FaPlusCircle size="50" />
+          <FaPlusCircle size={50} />
         </Box>
       </Link>
-      
-      {/* search input */}
-      <Box className="flex justify-between">
-        {/* NOTE: Chakra UI InputGroup has a 'leftElement' prop, not 'startElement' */}
-        <InputGroup flex="1"> 
+
+      {/* Search Input */}
+      <Box className="flex justify-between mb-5">
+        <InputGroup flex="1">
           <Input
             placeholder="Search tasks"
             variant="flushed"
+            value={searchText}
             onChange={handleSearch}
           />
-          {/* You may want to add the search icon inside the InputGroup */}
-          {/* <InputLeftElement pointerEvents="none" children={<LuSearch />} /> */}
         </InputGroup>
       </Box>
-      
-      {/* header */}
-      <header className="flex justify-between items-center">
+
+      {/* Header */}
+      <header className="flex justify-between items-center mb-5">
         <Box>
           <Text textStyle="5xl">Hello Blossom</Text>
-          <p>let get started on your tasks</p>
+          <p>Let &apos;,s get started on your tasks</p>
         </Box>
         <Dropdrown items={items} handleChange={handleFilter} />
       </header>
 
-      {/* main */}
+      {/* Todos */}
       <main className="mt-5">
-        {/* Show skeletons if loading, otherwise map the current paged list */}
-        {!todoQuery.isLoading 
-          && currentList.map((item) => (
-               <SingleTodo
-                 item={item}
-                 key={item.id}
-                 isLoading={false}
-               />
-             ))}
+        {todoQuery.isLoading ? (
+          <Text>Loading...</Text>
+        ) : (
+          currentList.map((item) => (
+            <SingleTodo key={item.id} item={item} isLoading={false} />
+          ))
+        )}
       </main>
 
-      {/* //pagination */}
+      {/* Pagination */}
       <Box className="flex justify-around my-5">
-        <Pagination.Root
-          count={pageLength} // Count is the size of the filtered/searched list
-          pageSize={PAGE_SIZE}
-          page={page} // Control the current page from state
-          onPageChange={handlePageChange}
-        >
-          {/* button */}
-          <ButtonGroup variant="outline">
-            <Pagination.PrevTrigger asChild>
-              <IconButton disabled={page === 1}>
-                <LuChevronLeft />
-              </IconButton>
-            </Pagination.PrevTrigger>
-
-            <Pagination.Items
-              render={(p: { value: number }) => (
-                <span className="sm:px-7 text-xl">{p.value}</span>
-              )}
-            />
-
-            <Pagination.NextTrigger asChild>
-              <IconButton disabled={page === totalPages || pageLength === 0}>
-                <LuChevronRight />
-              </IconButton>
-            </Pagination.NextTrigger>
-          </ButtonGroup>
-        </Pagination.Root>
+        <ButtonGroup variant="outline">
+         <IconButton
+  onClick={() => setPage((p) => Math.max(1, p - 1))}
+  disabled={page === 1}
+  aria-label="Previous Page"
+>
+  <LuChevronLeft />
+</IconButton>
+          <Text className="px-3 text-xl">
+            {page} / {totalPages || 1}
+          </Text>
+        <IconButton
+  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+  disabled={page === totalPages || totalPages === 0}
+  aria-label="Next Page"
+>
+  <LuChevronRight />
+</IconButton>
+        </ButtonGroup>
       </Box>
     </Box>
-  );
+  )
 }

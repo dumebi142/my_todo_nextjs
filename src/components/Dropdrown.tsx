@@ -1,9 +1,22 @@
-import React from "react";
+import React from "react"
+import { Button, Menu, Portal } from "@chakra-ui/react"
+import { HiSortAscending } from "react-icons/hi"
 
-import { Button, Menu, Portal } from "@chakra-ui/react";
-import { HiSortAscending } from "react-icons/hi";
+// Define the shape of each item
+interface DropdownItem {
+  label: string
+  value: string
+}
 
-const Dropdrown = ({ items, handleChange }) => {
+// Define props for the component
+interface DropdownProps {
+  items: DropdownItem[]
+  handleChange: (value: string) => void
+}
+
+const Dropdown: React.FC<DropdownProps> = ({ items, handleChange }) => {
+  if (!items || items.length === 0) return null // optional safeguard
+
   return (
     <Menu.Root>
       <Menu.Trigger asChild>
@@ -11,13 +24,14 @@ const Dropdrown = ({ items, handleChange }) => {
           <HiSortAscending /> Filter
         </Button>
       </Menu.Trigger>
-      <Portal>   
+      <Portal>
         <Menu.Positioner>
           <Menu.Content minW="10rem">
             <Menu.RadioItemGroup
-              value={items[0].value}
-              onValueChange={handleChange}
-            >
+  value={items[0].value}
+  onValueChange={(e) => handleChange(e.value)} // extract the string value
+>
+
               {items.map((item) => (
                 <Menu.RadioItem key={item.value} value={item.value}>
                   {item.label}
@@ -29,7 +43,7 @@ const Dropdrown = ({ items, handleChange }) => {
         </Menu.Positioner>
       </Portal>
     </Menu.Root>
-  );
-};
+  )
+}
 
-export default Dropdrown;
+export default Dropdown
